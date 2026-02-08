@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const hadError = false;
+var hadError = false;
 
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(.{}) = .init;
