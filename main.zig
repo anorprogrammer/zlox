@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const hadError = false;
+
 pub fn main() !void {
     var gpa: std.heap.GeneralPurposeAllocator(.{}) = .init;
     const allocator = gpa.allocator();
@@ -24,6 +26,8 @@ fn runFile(allocator: std.mem.Allocator, path: []const u8) !void {
     defer allocator.free(source);
 
     try run(allocator, source);
+
+    if (hadError) std.process.exit(65);
 }
 
 fn runPrompt(allocator: std.mem.Allocator) !void {
@@ -53,6 +57,8 @@ fn runPrompt(allocator: std.mem.Allocator) !void {
 
         const line = allocating_writer.written();
         try run(allocator, line);
+        hadError = false;
+
         allocating_writer.clearRetainingCapacity(); // empty the line buffer
         stdin_reader.interface.toss(1); // skip the newline
     }
@@ -61,5 +67,22 @@ fn runPrompt(allocator: std.mem.Allocator) !void {
 fn run(allocator: std.mem.Allocator, source: []const u8) !void {
     _ = allocator;
 
+    // NOTE: this should be implemented
+
     std.debug.print("\nYou wrote: {s}\n", .{source});
+}
+
+// ---- Error handling functions ----
+
+fn report(line: u32, where: []const u8, message: []const u8) !void {
+    var stderr_buffer: [1024]u8 = undefined;
+    var stderr_writer: std.fs.File.Writer = std.fs.File.stdout().writer(&stderr_buffer);
+    const stderr: *std.Io.Writer = &stderr_writer.interface;
+
+    _ = stderr.print("[line {d}] Error{a}: {a}\n", .{ line, where, message });
+    hadError = true;
+}
+
+fn _error(line: u32, message: []const u8) void {
+    try report(line, "", message);
 }
