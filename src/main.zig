@@ -1,4 +1,5 @@
 const std = @import("std");
+const Scanner = @import("scanner.zig").Scanner;
 
 var hadError = false;
 
@@ -65,24 +66,30 @@ fn runPrompt(allocator: std.mem.Allocator) !void {
 }
 
 fn run(allocator: std.mem.Allocator, source: []const u8) !void {
-    _ = allocator;
-
     // NOTE: this should be implemented
+    var scanner = Scanner.init(source);
 
-    std.debug.print("\nYou wrote: {s}\n", .{source});
+    _ = try scanner.scanTokens(allocator);
+
+    std.debug.print("\nTokens:\n", .{});
+    for (scanner.tokens.items) |token| {
+        std.debug.print("Token: {s} (type: {any})\n", .{ token.lexeme, token.token_type });
+    }
+
+    std.debug.print("\nYou wrote: {any}\n", .{scanner});
 }
 
 // ---- Error handling functions ----
 
-fn report(line: u32, where: []const u8, message: []const u8) !void {
+fn report(line: usize, where: []const u8, message: []const u8) !void {
     var stderr_buffer: [1024]u8 = undefined;
     var stderr_writer: std.fs.File.Writer = std.fs.File.stdout().writer(&stderr_buffer);
     const stderr: *std.Io.Writer = &stderr_writer.interface;
 
-    _ = stderr.print("[line {d}] Error{a}: {a}\n", .{ line, where, message });
+    try stderr.print("[line {any}] Error{any}: {any}\n", .{ line, where, message });
     hadError = true;
 }
 
-fn _error(line: u32, message: []const u8) void {
+pub fn root_error(line: usize, message: []const u8) !void {
     try report(line, "", message);
 }
