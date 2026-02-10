@@ -260,5 +260,3 @@ pub const Scanner = struct {
         ));
     }
 };
-
-// 4.6.1 String literals
